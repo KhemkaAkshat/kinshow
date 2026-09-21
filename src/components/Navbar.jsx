@@ -5,6 +5,7 @@ import { getSearchHistory, saveSearchTerm, removeSearchTerm } from '../store';
 
 export default function Navbar({ watchlistCount }) {
   const [scrolled, setScrolled] = useState(false);
+  const [themePreference, setThemePreference] = useState(() => localStorage.getItem('kinshow-theme'));
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -26,6 +27,20 @@ export default function Navbar({ watchlistCount }) {
   const removeSearch = useCallback((timestamp) => {
     setSearchHistory(removeSearchTerm(timestamp));
   }, []);
+
+  const systemTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  const theme = themePreference || systemTheme;
+
+  useEffect(() => {
+    if (themePreference) document.documentElement.dataset.theme = themePreference;
+    else delete document.documentElement.dataset.theme;
+  }, [themePreference]);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('kinshow-theme', nextTheme);
+    setThemePreference(nextTheme);
+  };
 
   useEffect(() => { const h = () => setScrolled(window.scrollY > 30); window.addEventListener('scroll', h, { passive: true }); return () => window.removeEventListener('scroll', h); }, []);
   useEffect(() => { setSearchOpen(false); setQuery(''); setResults([]); }, [location]);
@@ -72,6 +87,13 @@ export default function Navbar({ watchlistCount }) {
             <button className="nav-icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search (press /)">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             </button>
+            <button className="nav-icon-btn" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              )}
+            </button>
             <Link to="/watchlist" className="nav-icon-btn nav-watchlist" aria-label="My List">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
               {watchlistCount > 0 && <span className="nav-badge">{watchlistCount}</span>}
@@ -86,6 +108,14 @@ export default function Navbar({ watchlistCount }) {
         <Link to="/tv" className={`mobile-nav-item ${isActive('/tv') ? 'mobile-nav-item--active' : ''}`}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><path d="M17 2l-5 5-5-5"/></svg><span>TV</span></Link>
         <button className="mobile-nav-item" onClick={() => setSearchOpen(true)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><span>Search</span></button>
         <Link to="/watchlist" className={`mobile-nav-item ${isActive('/watchlist') ? 'mobile-nav-item--active' : ''}`}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>My List</span></Link>
+        <button className="mobile-nav-item" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+          {theme === 'dark' ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          )}
+          <span>Theme</span>
+        </button>
       </div>
       {searchOpen && (
         <div className="search-overlay" onClick={(e) => { if (e.target === e.currentTarget) { setSearchOpen(false); setQuery(''); setResults([]); } }}>
