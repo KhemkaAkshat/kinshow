@@ -234,7 +234,10 @@ export async function tvmazeMultipleShows(ids) {
 
 export async function searchMulti(q) {
   if (!q?.trim()) return { results: [] };
-  if (TMDB_KEY) return tmdbSearchMulti(q);
+  if (TMDB_KEY) {
+    const tmdb = await tmdbSearchMulti(q);
+    if (tmdb.results.length > 0) return tmdb;
+  }
   const [tvResults, omdbResults] = await Promise.all([tvmazeSearch(q), omdbSearchMulti(q)]);
   const localMovies = MOVIES.filter(m => m.title.toLowerCase().includes(q.toLowerCase())).map(m => ({ ...m, media_type: 'movie' }));
   const seenIds = new Set(localMovies.map(m => m.id));
