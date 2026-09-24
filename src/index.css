@@ -14,7 +14,7 @@ html { scroll-behavior: smooth; }
   --text-muted: #55576a;
   --accent: #c8102e;
   --accent-hover: #e01434;
-  --accent-subtle: rgba(200,16,46,0.12);
+  --accent-subtle: rgba(24,119,242,0.12);
   --success: #22c55e;
   --warning: #f59e0b;
   --error: #ef4444;
@@ -50,7 +50,7 @@ html { scroll-behavior: smooth; }
     --text: #171923;
     --text-secondary: #5d6270;
     --text-muted: #858b98;
-    --accent-subtle: rgba(200,16,46,0.1);
+    --accent-subtle: rgba(24,119,242,0.1);
     --nav-bg: rgba(245,246,248,0.9);
     --shadow-sm: 0 1px 3px rgba(20,24,35,0.08);
     --shadow-md: 0 4px 12px rgba(20,24,35,0.12);

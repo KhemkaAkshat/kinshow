@@ -6,6 +6,7 @@ import { getSearchHistory, saveSearchTerm, removeSearchTerm } from '../store';
 export default function Navbar({ watchlistCount }) {
   const [scrolled, setScrolled] = useState(false);
   const [themePreference, setThemePreference] = useState(() => localStorage.getItem('kinshow-theme'));
+  const [systemTheme] = useState(() => window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -28,7 +29,6 @@ export default function Navbar({ watchlistCount }) {
     setSearchHistory(removeSearchTerm(timestamp));
   }, []);
 
-  const systemTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   const theme = themePreference || systemTheme;
 
   useEffect(() => {
