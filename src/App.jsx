@@ -18,8 +18,29 @@ import Privacy from './pages/Privacy';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import ScrollButton from './components/ScrollButton';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import NotFound from './pages/NotFound';
+
+function RouteProgress() {
+  const location = useLocation();
+  const initialLocationKey = useRef(location.key);
+  const [status, setStatus] = useState('idle');
+
+  useEffect(() => {
+    if (location.key === initialLocationKey.current) return undefined;
+
+    setStatus('loading');
+    const completeTimer = window.setTimeout(() => setStatus('complete'), 250);
+    const hideTimer = window.setTimeout(() => setStatus('idle'), 500);
+
+    return () => {
+      window.clearTimeout(completeTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [location.key]);
+
+  return <div className={`route-progress route-progress--${status}`} role="progressbar" aria-label="Loading page" aria-valuemin="0" aria-valuemax="100" aria-valuenow={status === 'complete' ? 100 : 70} />;
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -105,6 +126,7 @@ function AppInner() {
 export default function App() {
   return (
     <BrowserRouter>
+      <RouteProgress />
       <ScrollToTop />
       <ToastProvider>
         <AppInner />
