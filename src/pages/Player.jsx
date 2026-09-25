@@ -43,6 +43,17 @@ export default function Player() {
 
   useEffect(() => { const h = (e) => { if (e.key === 'Escape') navigate(-1); }; window.addEventListener('keydown', h); return () => window.removeEventListener('keydown', h); }, [navigate]);
 
+  useEffect(() => {
+    const originalOpen = window.open;
+    window.open = () => null;
+    const originalTargetClick = (e) => {
+      const a = e.target.closest?.('a[target="_blank"]');
+      if (a && a.hostname !== window.location.hostname) { e.preventDefault(); }
+    };
+    document.addEventListener('click', originalTargetClick, true);
+    return () => { window.open = originalOpen; document.removeEventListener('click', originalTargetClick, true); };
+  }, []);
+
   if (!loc) return <main className="page player-page"><div className="empty-state"><h3>No content selected</h3><p>Go back and select something to watch.</p></div></main>;
 
   const { type = 'movie', id, title, imdbId, tvmazeId, season = 1, episode = 1 } = loc;
@@ -85,7 +96,7 @@ export default function Player() {
       )}
       <div className="player-container">
         {url ? (
-          <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" />
+          <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-autoplay" />
         ) : (
           <div className="empty-state">
             <h3>Unable to load player</h3>
