@@ -58,6 +58,33 @@ export async function omdbByImdb(imdbId) {
   return d;
 }
 
+const na = (v) => (v && v !== 'N/A' ? v : '');
+
+export async function omdbMovieById(imdbId) {
+  const d = await omdbByImdb(imdbId);
+  if (!d) return null;
+  const poster = na(d.Poster);
+  return {
+    id: d.imdbID, imdbID: d.imdbID,
+    title: d.Title, name: d.Title,
+    overview: na(d.Plot),
+    poster, poster_path: poster || null,
+    backdrop_path: null,
+    vote_average: parseFloat(d.imdbRating) || 0,
+    rating: parseFloat(d.imdbRating) || 0,
+    year: na(d.Year), release_date: na(d.Released),
+    runtime: parseInt(d.Runtime) || 0,
+    genres: na(d.Genre).split(', ').filter(Boolean).map(name => ({ name })),
+    genre_ids: [],
+    director: na(d.Director), actors: na(d.Actors),
+    language: na(d.Language), country: na(d.Country),
+    rated: na(d.Rated), boxOffice: na(d.BoxOffice),
+    awards: na(d.Awards), plot: na(d.Plot),
+    media_type: 'movie', type: 'movie',
+    cast: [], crew: []
+  };
+}
+
 export async function omdbSearch(query) {
   if (!query?.trim()) return [];
   const ck = 'omdb_s_' + query;

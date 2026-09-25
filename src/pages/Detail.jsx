@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { tvmazeShow, tvmazeSeasons, tvmazeEpisodes, omdbEpisodes, tvmazeShowsByPage, MOVIES, title as t, year as y, rating as r, runtime } from '../api';
+import { tvmazeShow, tvmazeSeasons, tvmazeEpisodes, omdbEpisodes, omdbMovieById, tvmazeShowsByPage, MOVIES, title as t, year as y, rating as r, runtime } from '../api';
 import { useWatchlist, useHistory } from '../store';
 import { useToast } from '../components/Toast';
 import CastCard from '../components/CastCard';
@@ -100,8 +100,18 @@ export default function Detail() {
       if (movie) {
         setData({ ...movie, media_type: 'movie', cast: [], crew: [] });
         addRecent({ id: movie.id, media_type: 'movie', title: movie.title, poster: movie.poster_path });
+        setLoading(false);
+      } else if (String(id).startsWith('tt')) {
+        omdbMovieById(String(id)).then(d => {
+          if (d) {
+            setData(d);
+            addRecent({ id: d.id, media_type: 'movie', title: d.title, poster: d.poster_path });
+          }
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     }
   }, [type, id]);
 
