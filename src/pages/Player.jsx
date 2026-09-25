@@ -35,6 +35,7 @@ export default function Player() {
   const navigate = useNavigate();
   const [server, setServer] = useState(0);
   const [loc, setLoc] = useState(null);
+  const [armed, setArmed] = useState(false);
 
   useEffect(() => {
     if (location.state) { setLoc(location.state); localStorage.setItem('lg_lastViewed', JSON.stringify(location.state)); }
@@ -54,6 +55,8 @@ export default function Player() {
     return () => { window.open = originalOpen; document.removeEventListener('click', originalTargetClick, true); };
   }, []);
 
+  const armPlayer = () => { if (!armed) setArmed(true); };
+
   if (!loc) return <main className="page player-page"><div className="empty-state"><h3>No content selected</h3><p>Go back and select something to watch.</p></div></main>;
 
   const { type = 'movie', id, title, imdbId, tvmazeId, season = 1, episode = 1 } = loc;
@@ -69,6 +72,7 @@ export default function Player() {
     setLoc(next);
     localStorage.setItem('lg_lastViewed', JSON.stringify(next));
     setServer(0);
+    setArmed(false);
   };
 
   return (
@@ -85,7 +89,7 @@ export default function Player() {
         <h2 className="player-title">{title}{isTV ? ` — S${String(sn).padStart(2, '0')}E${String(ep).padStart(2, '0')}` : ''}</h2>
       </div>
       <div className="player-servers">
-        {SERVERS.map((sv, i) => <button key={sv.id} className={`player-server-btn ${i === server ? 'player-server-btn--active' : ''}`} onClick={() => setServer(i)}>{sv.name}</button>)}
+        {SERVERS.map((sv, i) => <button key={sv.id} className={`player-server-btn ${i === server ? 'player-server-btn--active' : ''}`} onClick={() => { setServer(i); setArmed(false); }}>{sv.name}</button>)}
       </div>
       {isTV && (
         <div className="player-ep-nav">
@@ -96,7 +100,10 @@ export default function Player() {
       )}
       <div className="player-container">
         {url ? (
-          <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-autoplay" />
+          <>
+            <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" />
+            {!armed && <div className="player-click-shield" onClickCapture={armPlayer} title="Click to enable player" />}
+          </>
         ) : (
           <div className="empty-state">
             <h3>Unable to load player</h3>
