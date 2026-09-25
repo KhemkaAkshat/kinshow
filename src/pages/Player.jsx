@@ -7,25 +7,27 @@ const SERVERS = [
   { id: 'vidsrc', name: 'VidSrc', build: (type, imdbId, title, season, episode) => {
     if (type === 'tv') {
       if (imdbId && imdbId.startsWith('tt')) return `https://vidsrc.pm/embed/tv?imdb=${imdbId}&season=${season || 1}&episode=${episode || 1}`;
-      return `https://vidsrc.pm/embed/tv?tmdb=${imdbId}&season=${season || 1}&episode=${episode || 1}`;
+      if (imdbId) return `https://vidsrc.pm/embed/tv?tmdb=${imdbId}&season=${season || 1}&episode=${episode || 1}`;
+      return '';
     }
     if (imdbId && imdbId.startsWith('tt')) return `https://vidsrc.pm/embed/movie?imdb=${imdbId}`;
-    return `https://vidsrc.pm/embed/movie?tmdb=${imdbId}`;
+    if (imdbId) return `https://vidsrc.pm/embed/movie?tmdb=${imdbId}`;
+    return '';
   }},
   { id: 'vidcore', name: 'VidCore', build: (type, imdbId, title, season, episode) => {
-    const id = imdbId || '';
-    if (type === 'tv') return `https://vidcore.org/embed/tv/${id}/${season || 1}/${episode || 1}`;
-    return `https://vidcore.org/embed/movie/${id}`;
+    if (!imdbId) return '';
+    if (type === 'tv') return `https://vidcore.org/embed/tv/${imdbId}/${season || 1}/${episode || 1}`;
+    return `https://vidcore.org/embed/movie/${imdbId}`;
   }},
   { id: 'peachify', name: 'Peachify', build: (type, imdbId, title, season, episode) => {
-    const id = imdbId || '';
-    if (type === 'tv') return `https://peachify.top/embed/tv/${id}/${season || 1}/${episode || 1}`;
-    return `https://peachify.top/embed/movie/${id}`;
+    if (!imdbId) return '';
+    if (type === 'tv') return `https://peachify.top/embed/tv/${imdbId}/${season || 1}/${episode || 1}`;
+    return `https://peachify.top/embed/movie/${imdbId}`;
   }},
   { id: 'vidfast', name: 'VidFast', build: (type, imdbId, title, season, episode) => {
-    const id = imdbId || '';
-    if (type === 'tv') return `https://vidfast.vc/tv/${id}/${season || 1}/${episode || 1}`;
-    return `https://vidfast.vc/movie/${id}`;
+    if (!imdbId) return '';
+    if (type === 'tv') return `https://vidfast.vc/tv/${imdbId}/${season || 1}/${episode || 1}`;
+    return `https://vidfast.vc/movie/${imdbId}`;
   }},
 ];
 
@@ -83,9 +85,16 @@ export default function Player() {
         </div>
       )}
       <div className="player-container">
-        <AdBlockGuard>
-          <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" />
-        </AdBlockGuard>
+        {url ? (
+          <AdBlockGuard>
+            <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" />
+          </AdBlockGuard>
+        ) : (
+          <div className="empty-state">
+            <h3>Unable to load player</h3>
+            <p>No streaming source available for this title. Try a different server.</p>
+          </div>
+        )}
       </div>
     </main>
   );
