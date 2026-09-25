@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
-import { tvmazeEpisodes, tvmazeLookupByImdb } from '../api';
+import { tvmazeEpisodes, tvmazeLookupByImdb, tvmazeSeasons } from '../api';
 import { SEO, StructuredData, videoSchema } from '../components/SEO';
 
 const SERVERS = [
@@ -51,6 +51,7 @@ export default function Player() {
   const [loc, setLoc] = useState(null);
   const [armed, setArmed] = useState(false);
   const [episodes, setEpisodes] = useState([]);
+  const [seasons, setSeasons] = useState([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -106,6 +107,9 @@ export default function Player() {
         if (cancelled) return;
         if (eps) setEpisodes(eps);
         setEpsLoading(false);
+      });
+      tvmazeSeasons(tvId).then(sea => {
+        if (!cancelled && sea && sea.length > 0) setSeasons(sea);
       });
     });
     return () => { cancelled = true; };
@@ -254,6 +258,21 @@ export default function Player() {
 
       {isTV && (
         <div className="player-ep-nav">
+          {seasons.length > 1 && (
+            <select
+              className="player-season-select"
+              value={seasons.some(s => s.number === sn) ? sn : ''}
+              onChange={e => { const v = parseInt(e.target.value); if (v) goEp(1, v); }}
+              aria-label="Select season"
+            >
+              {!seasons.some(s => s.number === sn) && <option value="" disabled>Season {sn}</option>}
+              {seasons.map(s => (
+                <option key={s.id} value={s.number}>
+                  Season {s.number}{s.episodeOrder ? ` (${s.episodeOrder} eps)` : ''}
+                </option>
+              ))}
+            </select>
+          )}
           <button className="btn btn--ghost" disabled={sn <= 1 && ep <= 1} onClick={() => goEp(ep > 1 ? ep - 1 : 1, ep > 1 ? sn : Math.max(1, sn - 1))}>← Prev</button>
           <span className="player-ep-label">{fmtEp(sn, ep)}</span>
           <button className="btn btn--ghost" onClick={() => goEp(ep + 1, sn)}>Next →</button>
