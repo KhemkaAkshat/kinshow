@@ -2,9 +2,6 @@ const TVMAZE = 'https://api.tvmaze.com';
 const TVMAZE_KEY = 'ef2igMeJwNOOzyXM_GPKpbMDpHgfXtat';
 const OMDB_KEY = 'b90dd268';
 const OMDB = 'https://www.omdbapi.com';
-const TMDB_KEY = '96ae694042e76c9aa7030d5d097d93c7';
-const TMDB_IMG = 'https://image.tmdb.org/t/p/w500';
-export { TMDB_IMG };
 const PRE = 'lg_';
 const TTL = 24 * 60 * 60 * 1000;
 
@@ -59,6 +56,33 @@ export async function omdbByImdb(imdbId) {
   if (!d || d.Response === 'False') return null;
   save(ck, d);
   return d;
+}
+
+const na = (v) => (v && v !== 'N/A' ? v : '');
+
+export async function omdbMovieById(imdbId) {
+  const d = await omdbByImdb(imdbId);
+  if (!d) return null;
+  const poster = na(d.Poster);
+  return {
+    id: d.imdbID, imdbID: d.imdbID,
+    title: d.Title, name: d.Title,
+    overview: na(d.Plot),
+    poster, poster_path: poster || null,
+    backdrop_path: null,
+    vote_average: parseFloat(d.imdbRating) || 0,
+    rating: parseFloat(d.imdbRating) || 0,
+    year: na(d.Year), release_date: na(d.Released),
+    runtime: parseInt(d.Runtime) || 0,
+    genres: na(d.Genre).split(', ').filter(Boolean).map(name => ({ name })),
+    genre_ids: [],
+    director: na(d.Director), actors: na(d.Actors),
+    language: na(d.Language), country: na(d.Country),
+    rated: na(d.Rated), boxOffice: na(d.BoxOffice),
+    awards: na(d.Awards), plot: na(d.Plot),
+    media_type: 'movie', type: 'movie',
+    cast: [], crew: []
+  };
 }
 
 export async function omdbSearch(query) {
@@ -195,6 +219,16 @@ export async function tvmazeSeasons(showId) {
   return seasons;
 }
 
+export async function tvmazeLookupByImdb(imdbId) {
+  const ck = `tv_lookup_${imdbId}`;
+  const hit = cache(ck);
+  if (hit) return hit;
+  const d = await fetchJSON(`${TVMAZE}/lookup?imdb=${imdbId}`, 8000);
+  if (!d || !d.id) return null;
+  save(ck, d.id);
+  return d.id;
+}
+
 export async function tvmazeEpisodes(showId, seasonNum) {
   const ck = `tv_ep_${showId}_${seasonNum}`;
   const hit = cache(ck);
@@ -234,58 +268,12 @@ export async function tvmazeMultipleShows(ids) {
 
 export async function searchMulti(q) {
   if (!q?.trim()) return { results: [] };
-  if (TMDB_KEY) {
-    const tmdb = await tmdbSearchMulti(q);
-    if (tmdb.results.length > 0) return tmdb;
-  }
   const [tvResults, omdbResults] = await Promise.all([tvmazeSearch(q), omdbSearchMulti(q)]);
   const localMovies = MOVIES.filter(m => m.title.toLowerCase().includes(q.toLowerCase())).map(m => ({ ...m, media_type: 'movie' }));
   const seenIds = new Set(localMovies.map(m => m.id));
   const extraMovies = omdbResults.filter(m => !seenIds.has(m.id));
   const items = [...localMovies, ...extraMovies, ...tvResults.map(s => ({ ...s, media_type: 'tv' }))];
   return { results: items };
-}
-
-async function tmdbSearchMulti(q) {
-  const ck = 'tmdb_s_' + q;
-  const hit = cache(ck);
-  if (hit) return { results: hit };
-  const c = new AbortController();
-  const t = setTimeout(() => c.abort(), 10000);
-  try {
-    const url = new URL('https://api.themoviedb.org/3/search/multi');
-    url.searchParams.set('api_key', TMDB_KEY);
-    url.searchParams.set('query', q);
-    url.searchParams.set('include_adult', 'false');
-    url.searchParams.set('language', 'en-US');
-    const r = await fetch(url, { signal: c.signal });
-    clearTimeout(t);
-    if (!r.ok) return { results: [] };
-    const d = await r.json();
-    const items = (d.results || [])
-      .filter(i => (i.media_type === 'movie' || i.media_type === 'tv') && i.vote_count > 10)
-      .slice(0, 12)
-      .map(i => ({
-        id: i.id,
-        title: i.title || i.name,
-        name: i.name || i.title,
-        overview: i.overview || '',
-        poster_path: i.poster_path ? TMDB_IMG + i.poster_path : null,
-        poster: i.poster_path ? TMDB_IMG + i.poster_path : null,
-        backdrop_path: i.backdrop_path ? TMDB_IMG + i.backdrop_path : null,
-        vote_average: i.vote_average || 0,
-        rating: i.vote_average || 0,
-        release_date: i.release_date || i.first_air_date || '',
-        first_air_date: i.first_air_date || '',
-        year: (i.release_date || i.first_air_date || '').slice(0, 4),
-        media_type: i.media_type,
-        type: i.media_type,
-        genre_ids: i.genre_ids || [],
-        popularity: i.popularity || 0
-      }));
-    save(ck, items);
-    return { results: items };
-  } catch { clearTimeout(t); return { results: [] }; }
 }
 
 export function getMovies(category = 'popular') {
