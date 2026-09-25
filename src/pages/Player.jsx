@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { SEO, StructuredData, videoSchema } from '../components/SEO';
-import AdBlockGuard from '../components/AdBlockGuard';
 
 const SERVERS = [
   { id: 'vidsrc', name: 'VidSrc', build: (type, imdbId, title, season, episode) => {
@@ -86,9 +85,7 @@ export default function Player() {
       )}
       <div className="player-container">
         {url ? (
-          <AdBlockGuard>
-            <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" />
-          </AdBlockGuard>
+          <iframe key={`${server}-${url}`} src={url} title={title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="player-iframe" />
         ) : (
           <div className="empty-state">
             <h3>Unable to load player</h3>
