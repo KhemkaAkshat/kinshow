@@ -5,14 +5,14 @@ import AdBlockGuard from '../components/AdBlockGuard';
 
 const SERVERS = [
   { id: 'vidsrc', name: 'VidSrc', build: (type, imdbId, title, season, episode) => {
-    if (type === 'tv') {
-      if (imdbId && imdbId.startsWith('tt')) return `https://vidsrc.pm/embed/tv?imdb=${imdbId}&season=${season || 1}&episode=${episode || 1}`;
-      if (imdbId) return `https://vidsrc.pm/embed/tv?tmdb=${imdbId}&season=${season || 1}&episode=${episode || 1}`;
-      return '';
-    }
-    if (imdbId && imdbId.startsWith('tt')) return `https://vidsrc.pm/embed/movie?imdb=${imdbId}`;
-    if (imdbId) return `https://vidsrc.pm/embed/movie?tmdb=${imdbId}`;
-    return '';
+    if (!imdbId) return '';
+    if (type === 'tv') return `https://vidsrc2.ru/embed/tv/${imdbId}/${season || 1}/${episode || 1}`;
+    return `https://vidsrc2.ru/embed/movie/${imdbId}`;
+  }},
+  { id: 'vidsrcme', name: 'VidSrc2', build: (type, imdbId, title, season, episode) => {
+    if (!imdbId) return '';
+    if (type === 'tv') return `https://vidsrcme.su/embed/tv/${imdbId}/${season || 1}/${episode || 1}`;
+    return `https://vidsrcme.su/embed/movie/${imdbId}`;
   }},
   { id: 'vidcore', name: 'VidCore', build: (type, imdbId, title, season, episode) => {
     if (!imdbId) return '';
