@@ -192,6 +192,16 @@ export async function tvmazeSeasons(showId) {
   return seasons;
 }
 
+export async function tvmazeLookupByImdb(imdbId) {
+  const ck = `tv_lookup_${imdbId}`;
+  const hit = cache(ck);
+  if (hit) return hit;
+  const d = await fetchJSON(`${TVMAZE}/lookup?imdb=${imdbId}`, 8000);
+  if (!d || !d.id) return null;
+  save(ck, d.id);
+  return d.id;
+}
+
 export async function tvmazeEpisodes(showId, seasonNum) {
   const ck = `tv_ep_${showId}_${seasonNum}`;
   const hit = cache(ck);

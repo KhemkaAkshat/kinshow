@@ -167,13 +167,13 @@ export default function Detail() {
 
   const playContent = () => {
     addHistory({ id: itemId, media_type: type, title, poster_path: posterUrl, runtime: data.runtime }, 0);
-    navigate('/player', { state: { type, id: itemId, title, imdbId } });
+    navigate('/player', { state: { type, id: itemId, title, imdbId, tvmazeId: data.tvmazeId } });
   };
 
   const playEpisode = (ep) => {
     const itemId = imdbId || String(id);
     addHistory({ id: itemId, media_type: 'tv', title, poster_path: posterUrl, runtime: data.runtime, season: seasonNum, episode: ep.number }, 0);
-    navigate('/player', { state: { type: 'tv', id: itemId, title, imdbId, season: seasonNum, episode: ep.number } });
+    navigate('/player', { state: { type: 'tv', id: itemId, title, imdbId, tvmazeId: data.tvmazeId, season: seasonNum, episode: ep.number } });
   };
 
   return (
