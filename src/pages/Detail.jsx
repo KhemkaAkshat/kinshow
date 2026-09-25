@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { tvmazeShow, tvmazeSeasons, tvmazeEpisodes, omdbEpisodes, MOVIES, title as t, year as y, rating as r, runtime } from '../api';
+import { tvmazeShow, tvmazeSeasons, tvmazeEpisodes, omdbEpisodes, tvmazeShowsByPage, MOVIES, title as t, year as y, rating as r, runtime } from '../api';
 import { useWatchlist, useHistory } from '../store';
 import { useToast } from '../components/Toast';
 import CastCard from '../components/CastCard';
@@ -19,6 +19,7 @@ export default function Detail() {
   const [episodes, setEpisodes] = useState([]);
   const [seasonNum, setSeasonNum] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [recommended, setRecommended] = useState([]);
   const castScrollRef = useRef(null);
   const [showCastLeftFade, setShowCastLeftFade] = useState(false);
   const [showCastRightFade, setShowCastRightFade] = useState(false);
@@ -103,6 +104,33 @@ export default function Detail() {
       setLoading(false);
     }
   }, [type, id]);
+
+  useEffect(() => {
+    if (!data) return;
+    if (type === 'movie') {
+      const currentGenres = (data.genres || []).map(g => g.name.toLowerCase());
+      const recs = MOVIES
+        .filter(m => String(m.id) !== String(data.id))
+        .map(m => ({ ...m, media_type: 'movie', overlap: (m.genres || []).filter(g => currentGenres.includes(g.name.toLowerCase())).length }))
+        .filter(m => m.overlap > 0)
+        .sort((a, b) => b.overlap - a.overlap)
+        .slice(0, 12);
+      setRecommended(recs);
+    } else {
+      const tvmazeId = data.tvmazeId || Number(id);
+      const currentGenres = (data.genres || []).map(g => g.name.toLowerCase());
+      Promise.all([tvmazeShowsByPage(1), tvmazeShowsByPage(2), tvmazeShowsByPage(3)]).then(pages => {
+        const all = pages.flat();
+        const recs = all
+          .filter(s => s.id !== tvmazeId)
+          .map(s => ({ ...s, overlap: (s.genres || []).filter(g => currentGenres.includes(g.name.toLowerCase())).length }))
+          .filter(s => s.overlap > 0)
+          .sort((a, b) => b.overlap - a.overlap)
+          .slice(0, 12);
+        setRecommended(recs);
+      });
+    }
+  }, [data, type, id]);
 
   useEffect(() => {
     if (!data || type !== 'tv' || seasonNum < 1) return;
@@ -262,6 +290,17 @@ export default function Detail() {
           ) : (
             <div className="empty-state" style={{ padding: '24px' }}><p>Loading episodes...</p></div>
           )}
+        </section>
+      )}
+
+      {recommended.length > 0 && (
+        <section className="detail-section">
+          <h2 className="detail-section-title">Recommended for You</h2>
+          <div className="recommended-grid">
+            {recommended.map((item, i) => (
+              <MediaCard key={`${item.id}-${i}`} item={item} mediaType={type === 'tv' ? 'tv' : 'movie'} />
+            ))}
+          </div>
         </section>
       )}
     </main>
